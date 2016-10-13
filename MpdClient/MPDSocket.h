@@ -8,6 +8,8 @@
 
 #import <Foundation/Foundation.h>
 
+#import "Command.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -19,17 +21,17 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-// buffer size 20 causes
-// blocking on the recv
-// method of the socket
-// when the server is
-// stopped
 #define BUFFER_SIZE 1024
 
-#define END_RESPONSE "OK\n"
+#define END_RESPONSE "OK\n\0"
+#define ACK_RESPONSE "ACK\n\0"
 
 @interface MPDSocket : NSObject {
     
+    char *host;
+    
+    int port;
+     
     // integer pointer address to the socket.
     int sock;
     
@@ -38,17 +40,25 @@
     
 }
 
+@property NSString *version;
+
 // integer port value.
-@property NSString *port;
+//@property int port;
 
 // NSString variable host value.
-@property NSString *host;
+//@property char *host;
 
 // NSUinteger buffer value.
-@property NSUInteger buffer;
+//@property NSUInteger buffer;
 
--(id)initWithHost:(NSString *)initHost port:(NSString *) initPort;
+- (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
 
--(void)testConnection;
+- (id)initWithHost:(NSString *)nHost withPortNSInt:(NSInteger)nPort;
+
+- (id)sendMessage:(NSString *)message;
+
+- (NSArray *)sendCommand:(Command *)command;
+
+- (void)testConnection;
 
 @end

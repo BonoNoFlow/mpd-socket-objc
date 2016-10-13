@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7B2DBE251BB232F100310771 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 7B2DBE241BB232F100310771 /* main.m */; };
 		7B2DBE2D1BB2330800310771 /* MPDSocket.m in Sources */ = {isa = PBXBuildFile; fileRef = 7B2DBE2C1BB2330800310771 /* MPDSocket.m */; settings = {ASSET_TAGS = (); }; };
+		7B970E1C1DA4734C00F66273 /* Command.m in Sources */ = {isa = PBXBuildFile; fileRef = 7B970E1B1DA4734C00F66273 /* Command.m */; settings = {ASSET_TAGS = (); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -28,6 +29,8 @@
 		7B2DBE241BB232F100310771 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		7B2DBE2B1BB2330800310771 /* MPDSocket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDSocket.h; sourceTree = "<group>"; };
 		7B2DBE2C1BB2330800310771 /* MPDSocket.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDSocket.m; sourceTree = "<group>"; };
+		7B970E1A1DA4734C00F66273 /* Command.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Command.h; sourceTree = "<group>"; };
+		7B970E1B1DA4734C00F66273 /* Command.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Command.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -63,6 +66,8 @@
 				7B2DBE241BB232F100310771 /* main.m */,
 				7B2DBE2B1BB2330800310771 /* MPDSocket.h */,
 				7B2DBE2C1BB2330800310771 /* MPDSocket.m */,
+				7B970E1A1DA4734C00F66273 /* Command.h */,
+				7B970E1B1DA4734C00F66273 /* Command.m */,
 			);
 			path = MpdClient;
 			sourceTree = "<group>";
@@ -124,6 +129,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				7B2DBE2D1BB2330800310771 /* MPDSocket.m in Sources */,
+				7B970E1C1DA4734C00F66273 /* Command.m in Sources */,
 				7B2DBE251BB232F100310771 /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -241,6 +247,7 @@
 				7B2DBE2A1BB232F100310771 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
