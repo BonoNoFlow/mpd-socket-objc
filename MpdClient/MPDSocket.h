@@ -40,12 +40,12 @@
 
 @property NSString *version;
 
+- (int)connect;
+
 - (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
 
 - (id)initWithHost:(NSString *)nHost withPortNSInt:(NSInteger)nPort;
 
 - (NSArray *)sendCommand:(Command *)command;
-
-- (void)testConnection;
 
 @end

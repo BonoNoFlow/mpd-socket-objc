@@ -10,6 +10,7 @@
 #import "MPDSocket.h"
 #import "Command.h"
 
+#include <sys/socket.h>
 #include <string.h>
 
 
@@ -17,6 +18,11 @@ int main(int argc, const char * argv[]) {
     @autoreleasepool {
         MPDSocket *socket = [[MPDSocket alloc] initWithHost:@"192.168.2.4" withPortNSInt:6600 ];
         
+        int sock = [socket connect];
+        
+        if (sock != -1) {
+            NSLog(@"got sock!");
+        }
         
         Command *command = [[Command alloc] init:@"lsinfo" params: nil];
         

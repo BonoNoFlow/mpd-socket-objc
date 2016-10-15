@@ -16,18 +16,13 @@
 
 @synthesize version;
 
-void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t *addBufferSize) {
-    
-    *collectBuffer = realloc(*collectBuffer, *addBufferSize * sizeof(char));
-    strcat(*collectBuffer, buffer);
-    memset(buffer, 0, *numBytes);
-}
 
 - (NSArray *)sendCommand:(Command *)command {
     
     NSMutableArray *replyArray = [[NSMutableArray alloc] init];
     
     ssize_t length, n;
+    length = 0;
     
     char buffer[1024];
     bzero(buffer, 1023);
@@ -43,7 +38,7 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
     
     n = write(sock, command->c, strlen(command->c));
     if (n < 0) {
-        NSLog(@"ERROR writting");
+        NSLog(@"ERROR writing");
         exit(1);
     }
    
@@ -88,7 +83,7 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
         
         // the left over bytes have to be copied
         // to the beginning of the next buffer.
-        if (offset < &processB[n - 1]) {
+        if (offset <= &processB[n - 1]) {
             if (remain) {
                 free(remain);
             }
@@ -97,7 +92,7 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
             memcpy(remain, offset, length * sizeof(char));
         } else {
             NSLog(@"offset and processB are equal");
-            return 0;
+            //return 0;
         }
         free(processB);
         
@@ -120,36 +115,6 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
     
     return [NSArray arrayWithArray:replyArray];
 }
-
-// test method!
-- (void)testConnection {
-    
-    sock = [self connect];
-    
-    if (sock == 0) {
-        NSLog(@"No socket");
-        exit(1);
-    }
-    
-    ssize_t reply;
-    
-    reply = write(sock, "playlistinfo\n", strlen("playlistinfo\n"));
-    if (reply < 0) {
-        NSLog(@"ERROR writting");
-        exit(1);
-    }
-    
-    char buffer[1024];
-    bzero(buffer, 1023);
-    
-    while ((reply = read(sock, buffer, 1023)) != -1) {
-        NSLog(@"%s", buffer);
-        break;
-    }
-    
-        close(sock);
-}
-
 
 
 // get sockaddr, IPv4 or IPv6:
