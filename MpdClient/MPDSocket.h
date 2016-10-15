@@ -23,8 +23,9 @@
 
 #define BUFFER_SIZE 1024
 
-#define END_RESPONSE @"OK"
-#define ERROR_RESPONSE @"ACK"
+#define END_RESPONSE    @"OK"
+#define ERROR_RESPONSE  @"ACK"
+#define NEW_LINE        '\n'
 
 @interface MPDSocket : NSObject {
     
@@ -32,24 +33,12 @@
     
     int port;
      
-    // integer pointer address to the socket.
     int sock;
     
-    // struct containing the address information.
-    struct sockaddr_in server;
-    
+    struct sockaddr_in server;  
 }
 
 @property NSString *version;
-
-// integer port value.
-//@property int port;
-
-// NSString variable host value.
-//@property char *host;
-
-// NSUinteger buffer value.
-//@property NSUInteger buffer;
 
 - (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
 

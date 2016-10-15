@@ -14,14 +14,7 @@
 
 @implementation MPDSocket
 
-const char *ACK = "ACK";
-
-const char *OK = "OK";
-
-const char NEW_LINE = '\n';
-
 @synthesize version;
-
 
 void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t *addBufferSize) {
     
@@ -68,7 +61,7 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
         offset = processB;
     
         for (p = offset; p <= &processB[n - 1]; p++) {
-            if (*p == '\n') {
+            if (*p == NEW_LINE) {
                 length = p - offset;
                 dest = (char *)calloc(length + 1, sizeof(char));
                 memcpy(dest, offset, length * sizeof(char));
@@ -114,6 +107,7 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
             break;
         }
         
+        // remain bytes and new buffer are merged.
         processB = (char *)calloc(n + length, sizeof(char));
         memcpy(processB, &remain[0], length);
         memcpy(processB + length, &buffer[0], n);

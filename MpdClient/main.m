@@ -18,7 +18,7 @@ int main(int argc, const char * argv[]) {
         MPDSocket *socket = [[MPDSocket alloc] initWithHost:@"192.168.2.4" withPortNSInt:6600 ];
         
         
-        Command *command = [[Command alloc] init:@"status" params: nil];
+        Command *command = [[Command alloc] init:@"lsinfo" params: nil];
         
         NSArray *replyArray = [socket sendCommand:command];
         
