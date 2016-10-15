@@ -23,8 +23,8 @@
 
 #define BUFFER_SIZE 1024
 
-#define END_RESPONSE "OK\n\0"
-#define ACK_RESPONSE "ACK\n\0"
+#define END_RESPONSE @"OK"
+#define ERROR_RESPONSE @"ACK"
 
 @interface MPDSocket : NSObject {
     
@@ -54,8 +54,6 @@
 - (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
 
 - (id)initWithHost:(NSString *)nHost withPortNSInt:(NSInteger)nPort;
-
-- (id)sendMessage:(NSString *)message;
 
 - (NSArray *)sendCommand:(Command *)command;
 

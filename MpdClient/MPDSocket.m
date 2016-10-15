@@ -20,17 +20,7 @@ const char *OK = "OK";
 
 const char NEW_LINE = '\n';
 
-
-
-
 @synthesize version;
-
-// String met address HOST!
-//@synthesize host;
-
-// integer met PORT nummer!
-//@synthesize port;
-
 
 
 void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t *addBufferSize) {
@@ -40,165 +30,17 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
     memset(buffer, 0, *numBytes);
 }
 
-- (id)sendMessage:(NSString *)message {
-    
-    sock = [self connect];
-    
-    // has to become an error or log and return.
-    if (sock == 0) {
-        NSLog(@"connect(): Failed return 0");
-        return nil;
-    }
-    
-    if (sock == -1) {
-        NSLog(@"connect(): Failed return -1");
-        return nil;
-    }
-    
-    const char *command = [message UTF8String];
-        
-    if (send(sock, command, sizeof(command), 0) < 0) {
-        NSLog(@"Send command failed!");
-        return nil;
-    }
-    
-    // read the feedback of the server.
-    // ssize_t numBytes = 0;
-    char buffer[BUFFER_SIZE];
-    
-    // size of addBuffer where
-    // the filled buffer is added to.
-    // size increases by numBytes
-    // when bytes are written.
-    ssize_t addBufferSize = 1;
-    char *addBuffer = malloc(sizeof(char) * addBufferSize);
-    addBuffer[0] = '\0';
-    
-    // clear buffer!
-    memset(buffer, 0, BUFFER_SIZE);
-    
-    // TODO fill buffer,
-    // add buffer to stored buffer.
-    // read string or strings from stored buffer,
-    // store remaining data,
-    // next fill ...
-    
-    ssize_t readBytes;
-    
-    
-    NSLog(@"entering while lopp");
-    //
-    // while written to buffer.
-    
-    readBytes = read(sock, buffer, BUFFER_SIZE - 1);
-    NSLog(@"%ld\n", readBytes);
-    while ((readBytes = recv(sock, buffer, (BUFFER_SIZE - 1), 0)) != -1) {
-        printf("Bytes written\n");
-        // 0 when socket is shut by remote.
-        // normally client has to close connection.
-        if (readBytes == 0) {
-            break;
-        }
-        
-        if (readBytes == -1) {
-            break;
-        }
-        
-        // copy read buffer to what is left over from last read.
-        
-        // iterate through the buffer searching for '\n'.
-        int offset = 0;
-        
-        int i = 0;
-        
-        char *dest;
-        for (; i < readBytes ; i++) {
-            if (buffer[i] == NEW_LINE) {
-                
-                int length = i - offset;
-                dest = (char *) calloc(length, sizeof(char));
-                memcpy(dest, &buffer[offset], length);
-                
-                printf("%s\n", dest);
-                
-                offset = i + 1;
-                
-                free(dest);
-            }
-            
-        }
-        printf("%s\n", buffer);
-        //free(dest);
-        /*
-        for (p = &buffer[0]; p < (buffer +readBytes); p++) {
-            
-            if (*p == new_line) {
-                //printf("found%c", *p);
-                ptrdiff_t index = p - buffer;
-                ptrdiff_t offset = offsetP - buffer;
-                ptrdiff_t length = index - offset;
-                char dest[length];
-                memcpy(dest, offsetP, length);
-                NSString *out = [[NSString alloc] initWithUTF8String:dest];
-                NSLog(@"%@\n", out);
-                offsetP = p;
-            }
-        }*/
-        
-        
-    }
-    //
-    //  buffer stored.
-    //
-    //  if !stored.
-    //    new stored.
-    //    add data to stored.
-    //  else.
-    //    add data to stored.
-    //
-    //  int countEnters = 0;
-    //  for int i = 0 ; i < stored.size ; i++
-    //
-    //      if stored[i] == \n
-    //          add 
-    //          countEnters = i;
-    //
-    //
-    //  process stored.
-    //    add strings to NSMutableArray.
-    //
-    //  assign whats left in stored to stored.
-    //
-    
-    //numBytes = recv(sock, buffer, (BUFFER_SIZE - 1), 0);
-    /*
-    while (1) {
-        numBytes = recv(sock, buffer, (BUFFER_SIZE - 1), 0);
-        addBufferSize += numBytes;
-        buffer[numBytes] = '\0';
-        
-        if (numBytes == -1) {
-            perror("recv");
-            exit(1);
-        } else if (strstr(buffer, end_line)) {
-            addToBuffer(buffer, &addBuffer, &numBytes, &addBufferSize);
-            break;
-        }
-        addToBuffer(buffer, &addBuffer, &numBytes, &addBufferSize);
-        
-        numBytes = 0;
-    }
-    
-    NSString *reply = [[NSString alloc] initWithUTF8String:addBuffer];
-    return reply;*/
-    return nil;
-}
-
 - (NSArray *)sendCommand:(Command *)command {
-    //NSLog(@"%s\n", command->c);
-    NSMutableArray *replyArray = [[NSMutableArray alloc] init];
-    ssize_t replyBytes;
     
+    NSMutableArray *replyArray = [[NSMutableArray alloc] init];
+    
+    ssize_t length, n;
+    
+    char buffer[1024];
+    bzero(buffer, 1023);
+    
+    char *dest, *offset, *p, *processB, *remain;
+    remain = NULL;
     sock = [self connect];
     
     if (sock == 0) {
@@ -206,53 +48,34 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
         exit(1);
     }
     
-    replyBytes = write(sock, command->c, strlen(command->c));
-    if (replyBytes < 0) {
+    n = write(sock, command->c, strlen(command->c));
+    if (n < 0) {
         NSLog(@"ERROR writting");
         exit(1);
     }
+   
+    n = read(sock, buffer, 1023);
+    if (n < 0) {
+        NSLog(@"ERROR reading");
+        exit(1);
+    }
     
-    char buffer[1024];
-    bzero(buffer, 1023);
+    processB = (char *)calloc(n, sizeof(char));
+    memcpy(processB, &buffer[0], n * sizeof(char));
     
-    // todo copy leftover bytes to storage and ad it to the next buffer.
-    BOOL bytesLeft;
-    
-    replyBytes = read(sock, buffer, 1023);
-    
-    while (replyBytes != -1) {
-    
-    //while ((replyBytes = read(sock, buffer, 1023)) != -1) {
+    while (n != -1) {
         
-        int offset = 0;
-        
-        int i = 0;
-        
-        char *dest;
-        
-        // iterate through the buffer searching for '\n'.
-        // add the found char[]'s to the nsmutablearray.
-        for (; i < replyBytes ; i++) {
-            if (buffer[i] == NEW_LINE) {
-                
-                int length = (i - offset) + 1;
-                dest = (char *) calloc(length, sizeof(char));
-                memcpy(dest, &buffer[offset], (length - 1));
-                dest[(length - 1)] = '\0';
-                
-                NSString *feedback = [[NSString alloc] initWithCString:dest encoding:NSUTF8StringEncoding];
-                
-                // !!!!!! _____ TODO waarschijnlijk niet meer nodig_____ !!!!!!
-                if (feedback != nil) {
-                    [replyArray addObject:feedback];
-                } else {
-                    // log feedback nil.
-                    // storage left over bytes problem???
-                    NSLog(@"feedback is nil");
-                }
-                
-                offset = i + 1;
+        offset = processB;
+    
+        for (p = offset; p <= &processB[n - 1]; p++) {
+            if (*p == '\n') {
+                length = p - offset;
+                dest = (char *)calloc(length + 1, sizeof(char));
+                memcpy(dest, offset, length * sizeof(char));
+                dest[length] = '\0';
+                [replyArray addObject:[[NSString alloc] initWithCString:dest encoding:NSUTF8StringEncoding]];
                 free(dest);
+                offset = p + 1;
             }
         }
         
@@ -260,32 +83,42 @@ void addToBuffer(char *buffer, char **collectBuffer, ssize_t *numBytes, ssize_t 
         // before checking bytes left and new read of server,
         // as there's nothing left, exit!
         NSString *lastString = [replyArray lastObject];
-        if ([lastString isEqualToString:@"OK"]) {
+        if ([lastString isEqualToString:END_RESPONSE]) {
             [replyArray removeLastObject];
+            if (remain) {
+                free(remain);
+            }
+            free(processB);
             break;
         }
-
         
-        // the left over bytes have to copied
-        // at the beginning of the next buffer.
-        if (replyBytes >= offset) {
-            NSLog(@"bytes left");
-            bytesLeft = YES;
-            
-            if (replyBytes == offset) {
-                NSLog(@"replyBytes == offset");
-            } else if (replyBytes > offset) {
-                NSLog(@"replyBytes > offset");
+        
+        // the left over bytes have to be copied
+        // to the beginning of the next buffer.
+        if (offset < &processB[n - 1]) {
+            if (remain) {
+                free(remain);
             }
+            length = &processB[n - 1] - offset + 1;
+            remain = (char *) calloc(length, sizeof(char));
+            memcpy(remain, offset, length * sizeof(char));
+        } else {
+            NSLog(@"offset and processB are equal");
+            return 0;
+        }
+        free(processB);
+        
+        bzero(buffer, 1024);
+        n = read(sock, buffer, 1023);
+        if (n == -1 || n == 0) {
+            break;
         }
         
+        processB = (char *)calloc(n + length, sizeof(char));
+        memcpy(processB, &remain[0], length);
+        memcpy(processB + length, &buffer[0], n);
+        n = n + length;
         
-        
-        replyBytes = read(sock, buffer, 1023);
-    }
-    
-    if (replyBytes == -1) {
-        //return nil;
     }
     
     close(sock);
