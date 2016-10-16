@@ -17,21 +17,19 @@
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
         MPDSocket *socket = [[MPDSocket alloc] initWithHost:@"192.168.2.4" withPortNSInt:6600 ];
-        
-        int sock = [socket connect];
-        
-        if (sock != -1) {
-            NSLog(@"got sock!");
-        }
-        
-        Command *command = [[Command alloc] init:@"lsinfo" params: nil];
+                
+        Command *command = [[Command alloc] init:@"statis" params: nil];
         
         NSArray *replyArray = [socket sendCommand:command];
         
-        for (NSString *string in replyArray) {
-            NSLog(@"%@\n", string);
+        if (replyArray != nil) {
+            for (NSString *string in replyArray) {
+                NSLog(@"hello: %@\n", string);
+            }
+        } else {
+            NSLog(@"%@\n", [socket error]);
         }
-                
+        
     }
     return 0;
 }

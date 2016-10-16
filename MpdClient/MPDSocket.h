@@ -39,8 +39,11 @@
 }
 
 @property NSString *version;
+@property NSString *error;
 
 - (int)connect;
+
+- (NSString *)version;
 
 - (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
 
