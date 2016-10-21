@@ -11,17 +11,40 @@
 // !!!!!!!!!!!!!!!!!!!!!
 
 #import "MPDSocket.h"
+//#import "Command.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
+
+@interface MPDSocket ()
+- (int)connect:(NSError **)error;
+@end
 
 @implementation MPDSocket
 
 @synthesize version;
-@synthesize error;
+@synthesize ack;
 
 const char *OK = "OK\0";
 const char *ACK = "ACK\0";
 
+- (NSError *)error:(NSString *)value {
+    NSMutableDictionary* details = [NSMutableDictionary dictionary];
+    [details setValue:value forKey:NSLocalizedDescriptionKey];
+    return [NSError errorWithDomain:@"Socket" code:101 userInfo:details];
+}
 
-- (NSArray *)sendCommand:(Command *)command {
+
+
+- (NSArray *)sendCommand:(Command *)command error:(NSError **)error{
     
     NSMutableArray *replyArray = [[NSMutableArray alloc] init];
     
@@ -33,11 +56,10 @@ const char *ACK = "ACK\0";
     char *dest, *offset, *p, *processB, *remain;
     remain = NULL;
     
-    sock = [self connect];
+    sock = [self connect:error];
     
-    if (sock == 0) {
-        NSLog(@"No socket");
-        // TODO NSERROR
+    if (sock < 0) {
+        //*error = [self error:@"socket is 0, connect() failed!"];
         return nil;
     }
     
@@ -136,10 +158,10 @@ const char *ACK = "ACK\0";
     }
     
     close(sock);
-
     
     return [NSArray arrayWithArray:replyArray];
 }
+
 
 
 // get sockaddr, IPv4 or IPv6:
@@ -155,34 +177,101 @@ void *getInAddress(struct sockaddr *sockaddr) {
 // connect to the server.
 // method gives socket (int) back.
 // add error argument withError:(NSError *) error
-- (int)connect {
+- (int)connect:(NSError**)error {
     
+    int err, flags, ret;
     ssize_t numBytes;
     
     char buffer[20];
     
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0) {
-        NSLog(@"ERROR opening socket");
+    struct addrinfo hints, *server, *p;
+    
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+    
+    // test for ipv4 or 6.
+    err = getaddrinfo([_host UTF8String], [_port UTF8String], &hints, &server);
+    if (err) {
+        *error = [self error:[[NSString alloc] initWithUTF8String: gai_strerror(err)]];
         return -1;
     }
     
-    bzero((char *) &server, sizeof(server));
-    
-    // TODO test for ipv4 or 6.
-    
-    server.sin_family = AF_INET;
-    
-    inet_pton(AF_INET, host, &(server.sin_addr));
-    server.sin_port = htons(port);
-    
-    if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0) {
-        NSLog(@"ERROR connecting");
-        return -1;
+    // todo check increment never executed!
+    for (p= server; p != NULL; p = p->ai_next) {
+        if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+            *error = [self error:[[NSString alloc] initWithUTF8String:strerror(errno)]];
+            return -1;
+        }
+        
+        // maybe connect with timeout because on  wrong ip
+        // it takes 75 for error is thrown.
+        //if (connect(sock, p->ai_addr, p->ai_addrlen) < 0) {
+        //    continue;
+        //}
+        
+        fd_set rset, wset;
+        struct timeval timeValue;
+        err = 0;
+        
+        // get flags
+        flags = fcntl(sock, F_GETFL, 0);
+        
+        // set flags non blocking
+        fcntl(sock, F_SETFL, flags | O_NONBLOCK);
+        
+        // connect returns "in progress" if everything is ok
+        if ((ret = connect(sock, p->ai_addr, p->ai_addrlen)) < 0) {
+            if (errno != EINPROGRESS) {
+                *error = [self error:[[NSString alloc] initWithUTF8String:strerror(errno)]];
+                return -1;
+                //continue;
+            }
+        }
+        
+        // on connection made, exit loop
+        if (ret == 0) {
+            //return sock;
+            break;
+        }
+        
+        // call selct to wait for the connection
+        FD_ZERO(&rset);
+        FD_SET(sock, &rset);
+        wset = rset;
+        timeValue.tv_sec = 5;
+        timeValue.tv_usec = 0;
+        if ((ret = select(sock + 1, &rset, &wset, NULL, &timeValue)) == 0) {
+            close(sock);
+            errno = ETIMEDOUT;
+            *error = [self error:[[NSString alloc] initWithUTF8String:strerror(errno)]];
+            return -1;
+        }
+        
+        // check if connected, is socket write and readable and check for error
+        if (FD_ISSET(sock, &rset) || FD_ISSET(sock, &wset)) {
+            socklen_t len = sizeof(err);
+            if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &len) < 0) {
+                return -1;
+            }
+        }
+        
+        
+        
+        break;
     }
+    
+    // restor flags
+    fcntl(sock, F_SETFL, flags);
+    
+    
+    
+    
     
     if ((numBytes = read(sock, buffer, 19)) < 0) {
-        NSLog(@"error by recv(....): connect() MPDSocket");
+    //if ((numBytes = recv(sock, buffer, 19, 0))) {
+        *error = [self error:@"Error: read(....), connect() failed!"];
+        //NSLog(@"error by read(....): connect() MPDSocket");
         return -1;
     }
     buffer[numBytes] = '\0';
@@ -202,7 +291,7 @@ void *getInAddress(struct sockaddr *sockaddr) {
         return sock;
     } else if (strncmp(ACK, buffer, 3) == 0) {
         // trow error.
-        error = [[NSString alloc] initWithUTF8String:buffer];
+        ack = [[NSString alloc] initWithUTF8String:buffer];
         NSLog(@"ACK error");
         return 0;
     }
@@ -213,26 +302,16 @@ void *getInAddress(struct sockaddr *sockaddr) {
 
 
 
--(id)initWithHost:(NSString *)nHost withPortInt:(int)nPort {
+-(id)initWithHost:(NSString *)nHost port:(NSString *)nPort {
     self = [super init];
     
     if (self) {
-        host = (char *)[nHost UTF8String];
-        port = nPort;
+        _host = nHost;
+        _port = nPort;
         version = @"connect first!";
     }
     return self;
 }
 
--(id)initWithHost:(NSString *)nHost withPortNSInt:(NSInteger)nPort {
-    self = [super init];
-    
-    if (self) {
-        host = (char *)[nHost UTF8String];
-        port = (int) nPort;
-        version = @"connect first";
-    }
-    return self;
-}
 
 @end

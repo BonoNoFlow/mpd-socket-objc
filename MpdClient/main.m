@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <Cocoa/Cocoa.h>
 #import "MPDSocket.h"
 #import "Command.h"
 
@@ -16,20 +17,22 @@
 
 int main(int argc, const char * argv[]) {
     @autoreleasepool {
-        MPDSocket *socket = [[MPDSocket alloc] initWithHost:@"192.168.2.4" withPortNSInt:6600 ];
+        MPDSocket *socket = [[MPDSocket alloc] initWithHost:@"192.168.2.4" port:@"6600"];
                 
-        Command *command = [[Command alloc] init:@"statis" params: nil];
+        Command *command = [[Command alloc] init:@"playlistinfo" params: nil];
         
-        NSArray *replyArray = [socket sendCommand:command];
+        //NSError *error = [NSError errorWithDomain:@"main" code:101 userInfo:@{@"Error reason": @"Test"}];
+        NSError *error = nil;
+        NSArray *replyArray = [socket sendCommand:command error:&error];
         
-        if (replyArray != nil) {
+        if (error) {
+            NSLog(@"%@\n", error);
+            return 0;
+        } else {
             for (NSString *string in replyArray) {
                 NSLog(@"hello: %@\n", string);
             }
-        } else {
-            NSLog(@"%@\n", [socket error]);
         }
-        
     }
     return 0;
 }

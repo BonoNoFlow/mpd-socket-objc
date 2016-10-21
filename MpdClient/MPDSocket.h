@@ -7,19 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-
+//#import <Cocoa/Cocoa.h>
 #import "Command.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <netdb.h>
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 
 #define BUFFER_SIZE 1024
 
@@ -29,26 +19,20 @@
 
 @interface MPDSocket : NSObject {
     
-    char *host;
-    
-    int port;
-     
     int sock;
-    
-    struct sockaddr_in server;  
 }
 
+@property NSString *host;
+@property NSString *port;
 @property NSString *version;
-@property NSString *error;
-
-- (int)connect;
+@property NSString *ack;
 
 - (NSString *)version;
 
-- (id)initWithHost:(NSString *)nHost withPortInt:(int)nPort;
+- (id)initWithHost:(NSString *)nHost port:(NSString *)nPort;
 
-- (id)initWithHost:(NSString *)nHost withPortNSInt:(NSInteger)nPort;
 
-- (NSArray *)sendCommand:(Command *)command;
+
+- (NSArray *)sendCommand:(Command *)command error:(NSError **)error;
 
 @end
